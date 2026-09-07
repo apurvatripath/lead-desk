@@ -1,6 +1,6 @@
 # Lead Desk
 
-**No real Gemini call, CRM, Slack, or email is connected by default. Every write is dry-run until you configure a real credential.** This proves the routing/scoring/idempotency logic against synthetic input; nothing here has been run against a real client's leads, CRM, or Slack workspace.
+**Every write is dry-run by default until you configure a real credential.** The routing/scoring/idempotency logic is proven against synthetic input, and the live adapters have also been verified separately against real Gemini, HubSpot, Discord, and Resend accounts using synthetic test data. No real client's leads are included.
 
 Built from `Lead_Desk_Business_Plan.docx` (v1.0, 6 September 2026) — a productized inbound-lead qualification and routing service for 5-25 person marketing agencies. This is the v1 scope from that plan: one normalized inbound source, AI scoring against an ICP rubric, CRM write, round-robin owner assignment, Slack alert, auto-reply for disqualified leads, and a weekly scorecard.
 
@@ -81,6 +81,6 @@ Two real bugs were found and fixed during this build via live testing, not caugh
 ## What is not built yet
 
 - **Meta Lead Ads / Google Lead Form / Webflow / GHL native API integrations.** These are treated as "generic" sources per the plan's own equivalence ("a webhook" is listed as one of the acceptable sources) — connecting each platform's own webhook/Zapier export to `/webhooks/lead/generic` is a per-client setup step, not unbuilt code, the same way Track A's Twilio number is a setup step and not a receiver rewrite.
-- **Real CRM/Slack/auto-reply verification against live accounts.** Slack is live-verified against a real endpoint; HubSpot and Resend are not yet — both need a real credential from Rajan, same pattern as Gemini/Twilio needed tonight.
+- **Client-specific production wiring.** Gemini, HubSpot, Discord, and Resend adapters were live-verified with synthetic data; each remains dry-run by default and requires the client's credentials and webhook configuration for deployment.
 - **GoHighLevel and Pipedrive CRM writers.** Plan allows any of HubSpot/GoHighLevel/Pipedrive; only HubSpot is built, since it has a genuinely free developer tier to test against without spending money.
 - **Multi-source add-on pricing/upsell logic, the loom video, the credentials handover doc.** Those are delivery-process/business items from the plan, not code.
