@@ -52,9 +52,9 @@ class Store:
         even under a new id."""
         with self.connection() as db:
             db.execute("BEGIN IMMEDIATE")
-            previous = db.execute("SELECT id,payload FROM leads WHERE id=?", (event_id,)).fetchone()
+            previous = db.execute("SELECT id,identity FROM leads WHERE id=?", (event_id,)).fetchone()
             if previous:
-                if previous["payload"] != json.dumps(payload, sort_keys=True):
+                if previous["identity"] != identity:
                     raise EventConflict()
                 return event_id, False
             same_identity = db.execute("SELECT id FROM leads WHERE identity=?", (identity,)).fetchone()

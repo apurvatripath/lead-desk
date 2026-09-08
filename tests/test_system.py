@@ -278,9 +278,10 @@ def test_live_async_workers_actually_process_a_real_lead(tmp_path, monkeypatch):
     break (wrong args to asyncio.to_thread, wrong dict key, etc.) while every
     direct-call test above keeps passing. This one starts the app for real."""
     monkeypatch.setenv("LEAD_DESK_MODE", "synthetic")
+    monkeypatch.setenv("LEAD_DESK_API_KEY", "test-only-key")
     monkeypatch.setenv("LEAD_DESK_OWNERS", "alice@agency.com")
     app = create_app(tmp_path / "live.sqlite3", scorer=Stub(scoring("hot", 0.9)), worker_enabled=True)
-    with TestClient(app) as client:
+    with TestClient(app, headers={"Authorization": "Bearer test-only-key"}) as client:
         response = client.post("/webhooks/lead/generic", json={
             "name": "Alex", "email": "alex@example.com", "company": "Acme",
             "message": "10 person team, $5k/mo budget, need this live this week"})
@@ -295,3 +296,79 @@ def test_live_async_workers_actually_process_a_real_lead(tmp_path, monkeypatch):
             time.sleep(0.05)
     assert record is not None and record["state"] == "done"
     assert record["result"]["route"] == "hot_assigned"
+
+
+@pytest.fixture
+def secured_app(tmp_path, monkeypatch):
+    monkeypatch.setenv("LEAD_DESK_API_KEY", "test-only-key")
+    monkeypatch.setenv("LEAD_DESK_CRM_MODE", "dry_run")
+    monkeypatch.setenv("ALERT_MODE", "dry_run")
+    monkeypatch.setenv("LEAD_DESK_AUTOREPLY_MODE", "dry_run")
+    return create_app(tmp_path / "api.sqlite3", scorer=Stub(), worker_enabled=False)
+
+
+def test_startup_requires_authentication_key(tmp_path, monkeypatch):
+    monkeypatch.delenv("LEAD_DESK_API_KEY", raising=False)
+    with pytest.raises(ValueError, match="LEAD_DESK_API_KEY"):
+        create_app(tmp_path / "no-key.sqlite3", scorer=Stub())
+    assert not (tmp_path / "no-key.sqlite3").exists()
+
+
+@pytest.mark.parametrize("authorization", [None, "Bearer wrong", "Basic test-only-key", "Bearer "])
+def test_unauthorized_requests_cannot_read_or_write(secured_app, authorization):
+    headers = {} if authorization is None else {"Authorization": authorization}
+    with TestClient(secured_app) as client:
+        assert client.post("/webhooks/lead/generic", json=payload(), headers=headers).status_code == 401
+        assert client.get("/leads/unknown", headers=headers).status_code == 401
+        assert client.get("/scorecard", headers=headers).status_code == 401
+        assert client.get("/health").status_code == 200
+    assert secured_app.state.store.counts() == {}
+
+
+@pytest.mark.parametrize("email", [None, "", "   ", 123, ["alex@example.com"]])
+def test_missing_email_rejected_before_queueing(secured_app, email):
+    with TestClient(secured_app, headers={"Authorization": "Bearer test-only-key"}) as client:
+        response = client.post("/webhooks/lead/generic", json=payload(email=email, phone="5550100"))
+        assert response.status_code == 422
+    assert secured_app.state.store.counts() == {}
+
+
+@pytest.mark.parametrize("explicit_id", [None, "source-submission-1"])
+def test_http_retry_keeps_original_record_and_processes_once(secured_app, monkeypatch, explicit_id):
+    import lead_desk.app as app_module
+    from datetime import datetime as real_datetime
+
+    class Clock:
+        count = 0
+
+        @classmethod
+        def now(cls, tz):
+            cls.count += 1
+            return real_datetime(2026, 9, 8, 10, 0, cls.count, tzinfo=tz)
+
+    monkeypatch.setattr(app_module, "datetime", Clock)
+    headers = {"Authorization": "Bearer test-only-key"}
+    if explicit_id:
+        headers["X-Lead-Desk-Submission-Id"] = explicit_id
+    with TestClient(secured_app, headers=headers) as client:
+        first = client.post("/webhooks/lead/generic", json=payload())
+        assert first.status_code == 200
+        event_id = first.json()["event_id"]
+        assert first.json()["duplicate"] is False
+        assert process_one(secured_app.state.store, secured_app.state.scorer, ["alice"])
+        original = client.get(f"/leads/{event_id}").json()
+        second = client.post("/webhooks/lead/generic", json=payload())
+        assert second.status_code == 200
+        assert second.json() == {"event_id": event_id, "duplicate": True}
+        third = client.post("/webhooks/lead/generic", json=payload(),
+                            headers={"X-Lead-Desk-Submission-Id": "different-id"})
+        assert third.json() == {"event_id": event_id, "duplicate": True}
+        assert not process_one(secured_app.state.store, secured_app.state.scorer, ["alice"])
+        assert client.get(f"/leads/{event_id}").json() == original
+        assert client.get("/scorecard").status_code == 200
+        assert secured_app.state.scorer.calls == 1
+        assert len(original["outbox"]) == 3
+        if explicit_id:
+            changed = client.post("/webhooks/lead/generic", json=payload(message="different content"))
+            assert changed.status_code == 409
+    assert secured_app.state.store.counts() == {"done": 1}

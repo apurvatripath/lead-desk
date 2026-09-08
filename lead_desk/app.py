@@ -3,11 +3,13 @@ import hashlib
 import json
 import logging
 import os
+import secrets
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from .alerts import SlackSender
 from .autoreply import ResendSender
@@ -33,6 +35,18 @@ def process_one(store, scorer, owners):
 
 
 def create_app(db_path=None, scorer=None, worker_enabled=True):
+    api_key = os.getenv("LEAD_DESK_API_KEY", "").strip()
+    if not api_key:
+        raise ValueError("LEAD_DESK_API_KEY is required")
+    bearer = HTTPBearer(auto_error=False)
+
+    def authenticate(credentials: HTTPAuthorizationCredentials = Depends(bearer)):
+        if credentials is None or not secrets.compare_digest(
+            credentials.credentials.encode(), api_key.encode()
+        ):
+            raise HTTPException(401, "Invalid or missing bearer token",
+                                headers={"WWW-Authenticate": "Bearer"})
+
     scorer = scorer or get_scorer()
     crm_mode = os.getenv("LEAD_DESK_CRM_MODE", "dry_run")
     if crm_mode not in {"dry_run", "hubspot"}:
@@ -95,7 +109,7 @@ def create_app(db_path=None, scorer=None, worker_enabled=True):
     app.state.store = store
     app.state.scorer = scorer
 
-    @app.post("/webhooks/lead/{source}")
+    @app.post("/webhooks/lead/{source}", dependencies=[Depends(authenticate)])
     async def lead_webhook(source: str, request: Request):
         try:
             raw = await request.json()
@@ -104,8 +118,10 @@ def create_app(db_path=None, scorer=None, worker_enabled=True):
         if not isinstance(raw, dict):
             raise HTTPException(400, "Body must be a JSON object")
         normalized = normalize(source, raw)
-        if not (normalized.get("email") or normalized.get("phone")):
-            raise HTTPException(422, "Lead needs at least an email or a phone number")
+        email = normalized.get("email")
+        if not isinstance(email, str) or not email.strip():
+            raise HTTPException(422, "Lead needs an email for the HubSpot workflow")
+        normalized["email"] = email.strip()
         now = datetime.now(timezone.utc).isoformat()
         content_hash = hashlib.sha256(json.dumps(normalized, sort_keys=True).encode()).hexdigest()
         submission_id = request.headers.get("X-Lead-Desk-Submission-Id")
@@ -123,11 +139,11 @@ def create_app(db_path=None, scorer=None, worker_enabled=True):
         return {"status": "ok", "crm": crm_mode, "alerts": alert_mode, "autoreply": autoreply_mode,
                 "scorer": scorer.name, "owners": len(owners), "queue": store.counts()}
 
-    @app.get("/scorecard")
+    @app.get("/scorecard", dependencies=[Depends(authenticate)])
     def scorecard(days: int = 7):
         return store.scorecard(time.time() - days * 86400)
 
-    @app.get("/leads/{event_id}")
+    @app.get("/leads/{event_id}", dependencies=[Depends(authenticate)])
     def get_lead(event_id: str):
         record = next((r for r in store.records() if r["event_id"] == event_id), None)
         if record is None:
