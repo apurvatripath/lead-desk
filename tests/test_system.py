@@ -314,6 +314,15 @@ def test_startup_requires_authentication_key(tmp_path, monkeypatch):
     assert not (tmp_path / "no-key.sqlite3").exists()
 
 
+def test_public_proof_page_contains_evidence_boundary(secured_app):
+    with TestClient(secured_app) as client:
+        response = client.get("/")
+    assert response.status_code == 200
+    assert "WORKING PROOF" in response.text
+    assert "FICTIONAL LEADS ONLY" in response.text
+    assert "does not claim a client deployment" in response.text
+
+
 @pytest.mark.parametrize("authorization", [None, "Bearer wrong", "Basic test-only-key", "Bearer "])
 def test_unauthorized_requests_cannot_read_or_write(secured_app, authorization):
     headers = {} if authorization is None else {"Authorization": authorization}

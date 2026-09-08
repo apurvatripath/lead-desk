@@ -10,11 +10,13 @@ from datetime import datetime, timezone
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.responses import HTMLResponse
 
 from .alerts import SlackSender
 from .autoreply import ResendSender
 from .crm import HubSpotSender
 from .outbox import process_outbox
+from .proof import PROOF_PAGE
 from .routing import route
 from .scoring import get_scorer
 from .sources import normalize
@@ -108,6 +110,10 @@ def create_app(db_path=None, scorer=None, worker_enabled=True):
     app = FastAPI(title="Lead Desk", lifespan=lifespan)
     app.state.store = store
     app.state.scorer = scorer
+
+    @app.get("/", response_class=HTMLResponse, include_in_schema=False)
+    def proof_page():
+        return PROOF_PAGE
 
     @app.post("/webhooks/lead/{source}", dependencies=[Depends(authenticate)])
     async def lead_webhook(source: str, request: Request):
