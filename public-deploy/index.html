@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lead Desk | Inbound Lead Qualification Demo</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect rx='8' width='32' height='32' fill='%233557a8'/%3E%3Ctext x='16' y='22' text-anchor='middle' fill='white' font-size='16' font-family='Arial' font-weight='700'%3EL%3C/text%3E%3C/svg%3E">
+  <meta name="description" content="Demo: form or ad lead scored, assigned, and posted to Slack in under a minute. Dry-run — nothing is sent.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="buyer.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">L</div><div><strong>Lead Desk</strong><span>Inbound qualification</span></div></div>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav>
+        <a class="nav-item active" href="#overview"><span>◇</span> Overview <b>Today</b></a>
+        <a class="nav-item" href="#leads"><span>○</span> Leads <b id="navLeads">4</b></a>
+        <a class="nav-item" href="#leads"><span>!</span> Needs review <b class="amber" id="navReview">1</b></a>
+        <a class="nav-item" href="#scorecard"><span>▤</span> Scorecard</a>
+        <a class="nav-item" href="#activity"><span>▸</span> Activity log</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="store-card"><span class="store-icon">✦</span><div><strong>Meridian Growth</strong><small>Marketing agency · Demo</small></div><span class="more">•••</span></div>
+        <div class="status-dot"><i></i> Demo environment</div>
+        <div class="user-card"><div class="avatar">AP</div><div><strong>Apurva</strong><span>Build owner</span></div></div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">INBOUND LEADS</div>
+          <h1>Every lead scored, routed, and briefed — before it goes cold</h1>
+          <span class="demo-chip">Demo · dry-run · nothing is sent</span>
+          <p class="buy-bar">Apurva Krishna · wire this to your forms / ads · <a href="mailto:apurva@apurvakrishna.com">apurva@apurvakrishna.com</a></p>
+        </div>
+        <div class="top-actions">
+          <div class="sim-wrap">
+            <button class="primary-btn" id="simHotBtn">Simulate form lead</button>
+            <button class="more-btn" id="moreBtn" type="button" aria-label="More simulations">…</button>
+            <div class="more-menu" id="moreMenu" hidden>
+              <button type="button" id="simWarmBtn">Simulate warm lead</button>
+              <button type="button" id="simColdBtn">Simulate cold lead</button>
+              <button type="button" id="simReviewBtn">Simulate low-confidence lead</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="hero-row" id="overview">
+        <div>
+          <p class="lede">Form or ad lead → scored → person assigned → Slack in under a minute.</p>
+          <p class="sublede">Sample agency inbound for Meridian Growth. Hot/warm get an owner and a Slack brief. Cold gets a polite auto-reply. Unsure goes to review. Nothing is sent from this page.</p>
+        </div>
+        <div class="pipeline"><span class="done">01 Inbound</span><em>→</em><span class="done">02 Classify</span><em>→</em><span class="done">03 Route</span><em>→</em><span class="current">04 Alert</span></div>
+      </section>
+
+      <section class="metrics">
+        <div class="metric-card"><span class="metric-label">Leads in this demo</span><strong id="leadsMetric">4</strong><small>this session</small></div>
+        <div class="metric-card"><span class="metric-label">Auto-routed</span><strong id="routedMetric">3</strong><small class="positive">hot + warm + cold <span>no human guess</span></small></div>
+        <div class="metric-card"><span class="metric-label">Needs human review</span><strong id="reviewMetric">1</strong><small class="warning">confidence &lt; 60% <span>held for a person</span></small></div>
+        <div class="metric-card"><span class="metric-label">Avg time to route</span><strong id="timeMetric">&lt;2s</strong><small class="positive">same call <span>no queue wait</span></small></div>
+      </section>
+
+      <section class="content-grid" id="leads">
+        <div class="panel order-panel"><div class="panel-head"><div><h2>Lead queue</h2><p>Inbound enquiries, most recent first</p></div><button class="filter-btn" type="button">All sources</button></div>
+          <div class="queue-tabs">
+            <button class="tab active" data-filter="all">All <b id="tabAll">4</b></button>
+            <button class="tab" data-filter="hot">Hot <b id="tabHot">1</b></button>
+            <button class="tab" data-filter="warm">Warm <b id="tabWarm">1</b></button>
+            <button class="tab" data-filter="cold">Cold <b id="tabCold">1</b></button>
+            <button class="tab" data-filter="review">Review <b id="tabReview">1</b></button>
+          </div>
+          <div class="order-list" id="orderList"></div>
+          <div class="panel-foot"><span>Showing <b id="showingCount">4</b> demo items</span><a href="#activity">View activity log →</a></div>
+        </div>
+
+        <div class="panel detail-panel" id="scorecard">
+          <div class="detail-head"><div><div class="detail-kicker"><span class="source-icon hot" id="detailIcon">HOT</span> <span id="detailKicker">Hot lead</span></div><h2 id="detailTitle"></h2></div><span class="status-pill ready" id="detailStatus"></span></div>
+          <div class="detail-meta"><span id="detailMeta"></span><span id="detailSource">Sample inbound webhook · not connected</span></div>
+          <div class="section-title"><span>What Lead Desk understood</span><span class="confidence-badge" id="detailConfidence"></span></div>
+          <div class="field-grid" id="fieldGrid"></div>
+          <div class="action-card">
+            <div class="action-title"><span class="action-icon">✦</span><div><strong id="recommendationTitle">What would go out</strong><small id="recommendation">Would assign a person and post to Slack. Would write to HubSpot — not connected.</small></div></div>
+            <div class="slack-mock" id="slackMock">
+              <div class="sm-head">Slack · #leads-inbound · dry-run</div>
+              <div class="sm-body" id="slackBody">New hot lead — Elena Vargas (Northline Media). Score 92%. “We spend about $8k/month on Meta.” Assigned to Alice Nguyen.</div>
+            </div>
+            <div class="phone-thread" id="replyThread" hidden></div>
+            <div class="message-preview" id="messagePreview" hidden></div>
+          </div>
+          <div class="timeline">
+            <div class="timeline-item done"><span></span><div><strong id="timeline1Title"></strong><small id="timeline1Meta"></small></div></div>
+            <div class="timeline-item done"><span></span><div><strong id="timeline2Title"></strong><small id="timeline2Meta"></small></div></div>
+            <div class="timeline-item current"><span></span><div><strong id="timeline3Title"></strong><small id="timeline3Meta"></small></div></div>
+          </div>
+          <div class="detail-actions"><button class="secondary-btn" id="reviewBtn">Flag for review</button><button class="primary-btn" id="actionBtn">View mock HubSpot record</button></div>
+          <p class="demo-action-note">Would write to HubSpot. This demo is not connected. Nothing is sent.</p>
+        </div>
+      </section>
+
+      <section class="bottom-grid" id="activity">
+        <div class="mini-panel"><div class="mini-head"><div><h2>What actually happens</h2><p>For local service and agency inbound, same flow</p></div><span class="spark">✦</span></div>
+          <div class="flow-steps">
+            <div><span>1</span><strong>Score the message</strong><small>Every signal needs a quote from what they actually wrote.</small></div>
+            <div><span>2</span><strong>Assign a person</strong><small>Below 60% confidence goes to a human — no guess.</small></div>
+            <div><span>3</span><strong>Write HubSpot</strong><small>Live install upserts by email. This page is a walkthrough.</small></div>
+            <div><span>4</span><strong>Slack the owner</strong><small>Hot/warm ping a person. Cold gets an auto-reply only.</small></div>
+          </div>
+        </div>
+        <div class="mini-panel"><div class="mini-head"><div><h2>Latest activity</h2><p>Every lead leaves a trace</p></div><a href="#leads">View queue →</a></div>
+          <div class="activity" id="activityList"></div>
+        </div>
+      </section>
+
+      <footer><span>Apurva Krishna · fixed setup from $997 · <a href="mailto:apurva@apurvakrishna.com">apurva@apurvakrishna.com</a></span><span>Demo · fictional leads · nothing is sent</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <div class="modal" id="hsModal" role="dialog" aria-label="Mock HubSpot contact">
+    <div class="modal-card">
+      <h3>HubSpot contact · mock</h3>
+      <p id="hsBody" style="font-size:13px;line-height:1.5;color:#53665e"></p>
+      <p style="font-size:11px;color:#88948f">Would write to HubSpot. Not connected in this demo.</p>
+      <button class="primary-btn" type="button" id="hsClose">Close</button>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

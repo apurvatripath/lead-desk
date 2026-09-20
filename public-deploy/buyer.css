@@ -1,0 +1,56 @@
+.sidebar{background:#1b2744}
+.brand-mark{background:#9db4ff;color:#1b2744}
+.nav-item{color:#b7c3df}
+.nav-item.active{background:#2b3d68}
+.nav-item.active b{background:#9db4ff;color:#1b2744}
+.nav-item b{background:#2a3a5c;color:#c9d3ea}
+.store-card strong,.user-card strong{color:#fff}
+.status-dot{color:#9aabc8}
+.avatar{background:#9db4ff;color:#1b2744}
+.eyebrow{color:#4d6cb3}
+.primary-btn{background:#3557a8;box-shadow:0 5px 14px rgba(53,87,168,.2)}
+.primary-btn:hover{background:#2a4588}
+.tab.active{background:#edf2ff;color:#3557a8}
+.tab.active b{background:#cdd9ff;color:#2a4588}
+.order-row:hover,.order-row.selected{background:#f3f6ff}
+.panel-foot a,.mini-head a{color:#3557a8}
+.status-pill.ready{background:#edf2ff;color:#3557a8}
+.action-card{background:#f4f7ff;border-color:#d9e2f7}
+.action-title strong{color:#2a4588}
+.action-icon{background:#cdd9ff;color:#3557a8}
+.toast{background:#1b2744}
+.demo-chip{display:inline-block;margin:8px 0 0;background:#edf2ff;color:#3557a8;font-size:11px;font-weight:700;padding:5px 9px;border-radius:999px}
+.buy-bar{margin-top:10px;font-size:12px;color:#53665e;line-height:1.5}
+.buy-bar a{color:#3557a8;font-weight:700;text-decoration:none}
+.sim-wrap{display:flex;gap:8px;align-items:center;position:relative}
+.more-btn{border:1px solid var(--line);background:#fff;width:39px;height:39px;border-radius:8px;cursor:pointer;font-size:18px;color:#63736d}
+.more-menu{position:absolute;right:0;top:46px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);min-width:210px;z-index:20;padding:6px}
+.more-menu button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:9px 11px;font:inherit;font-size:12px;cursor:pointer;border-radius:7px}
+.more-menu button:hover{background:#f3f6ff}
+.slack-mock,.phone-mock,.hs-mock{background:#fff;border:1px solid #e3eee9;border-radius:10px;margin-top:12px;overflow:hidden}
+.slack-mock .sm-head{background:#350d36;color:#fff;font-size:10px;font-weight:700;padding:8px 12px}
+.slack-mock .sm-body{padding:12px;font-size:12px;line-height:1.5;color:#1d1c1d}
+.slack-mock .sm-chan{color:#1264a3;font-weight:700}
+.phone-thread{display:flex;flex-direction:column;gap:8px;padding:12px}
+.bubble{max-width:88%;padding:9px 11px;border-radius:14px;font-size:12px;line-height:1.45}
+.bubble.out{align-self:flex-end;background:#0b93f6;color:#fff}
+.bubble.in{align-self:flex-start;background:#e9e9eb;color:#111}
+.bubble.sys{align-self:center;background:#fff4df;color:#8a5a10;font-size:10px;font-weight:700}
+.push-alert{background:#111;color:#fff;border-radius:12px;padding:12px 14px;margin-top:12px}
+.push-alert b{display:block;color:#ffb4a8;font-size:11px;letter-spacing:.4px;margin-bottom:4px}
+.row-flash{animation:flash 1s ease}
+@keyframes flash{0%{background:#fff4df}100%{background:#fff}}
+.activity.ping .activity-dot{box-shadow:0 0 0 6px rgba(85,184,147,.35);animation:ping 1s ease}
+@keyframes ping{to{box-shadow:0 0 0 0 rgba(85,184,147,0)}}
+.modal{position:fixed;inset:0;background:rgba(17,23,40,.45);display:none;place-items:center;z-index:50;padding:20px}
+.modal.show{display:grid}
+.modal-card{background:#fff;border-radius:12px;max-width:420px;width:100%;padding:18px}
+.modal-card h3{margin:0 0 8px;font-family:'Space Grotesk',sans-serif}
+iframe[src*="netlify"],a[href*="netlify.com"]:not(.keep-netlify){display:none !important}
+footer{flex-wrap:wrap;gap:8px;font-size:11px;color:#66756e}
+@media(max-width:680px){
+  .topbar{flex-direction:column;align-items:stretch;gap:12px}
+  .sim-wrap{width:100%}
+  .sim-wrap .primary-btn{flex:1}
+  .top-actions{width:100%;justify-content:flex-start}
+}
